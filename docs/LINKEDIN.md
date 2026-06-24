@@ -24,7 +24,7 @@ Le tout authentifié de bout en bout via Entra ID : SSO côté front, token AAD 
 Résultat : une app complète, sécurisée et auto-rafraîchissante, construite en mode « vibe-coding avec garde-fous ». La vraie valeur de Rayfin, ce n'est pas d'aller vite — c'est d'aller vite SANS sacrifier l'identité, l'intégrité des données et la gouvernance.
 
 Le code est open source 👇
-[lien du repo]
+https://github.com/marc-hadjeje/worldcup-topscorer
 
 #MicrosoftFabric #Rayfin #DataEngineering #React #Azure #VibeCoding #WorldCup2026
 
@@ -38,6 +38,6 @@ En une commande, Rayfin m'a donné base de données SQL, auth Fabric SSO et héb
 
 Idée → prod, sécurisé de bout en bout via Entra ID. 🚀
 
-Repo 👉 [lien]
+Repo 👉 https://github.com/marc-hadjeje/worldcup-topscorer
 
 #MicrosoftFabric #Rayfin #Azure #DataEngineering
