@@ -183,9 +183,11 @@ export function App() {
   // 2026 tab: only real 2026 participants (scored or played this edition)
   const season2026 = filtered.filter((p) => p.goals > 0 || p.matchesPlayed > 0);
 
-  // Sort by allTimeGoals for the all-time tab
+  // All-time tab: total = historical baseline (allTimeGoals) + live 2026 goals.
+  const allTimeTotal = (p: typeof players[number]) =>
+    (p.allTimeGoals ?? 0) + (p.goals ?? 0);
   const allTimeSorted = [...filtered]
-    .sort((a, b) => b.allTimeGoals - a.allTimeGoals)
+    .sort((a, b) => allTimeTotal(b) - allTimeTotal(a))
     .slice(0, 20);
 
   if (!isAuthenticated && !loading) {

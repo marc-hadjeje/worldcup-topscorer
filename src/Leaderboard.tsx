@@ -311,7 +311,7 @@ export function Leaderboard({ players, mode, favorites = [], teams = [] }: Props
         </thead>
         <tbody>
           {players.map((p, i) => {
-            const goalsDisplay = isAllTime ? p.allTimeGoals : p.goals;
+            const goalsDisplay = isAllTime ? p.allTimeGoals + p.goals : p.goals;
             const team = resolveTeam(p);
             return (
             <tr key={p.id} className={i < 3 ? `top-${i + 1}` : ""}>
