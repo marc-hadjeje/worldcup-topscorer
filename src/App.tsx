@@ -144,9 +144,9 @@ export function App() {
           "id", "firstName", "lastName", "number", "position",
           "goals", "assists", "matchesPlayed", "allTimeGoals",
           "team_id", "team.name", "team.code",
-        ]).orderBy({ goals: "desc" }).execute(),
+        ]).orderBy({ goals: "desc" }).first(1000).execute(),
         client.data.Team.select(["id", "name", "code", "group"])
-          .orderBy({ name: "asc" }).execute(),
+          .orderBy({ name: "asc" }).first(1000).execute(),
         client.data.Favorite.select([
           "id", "userName", "player_id",
         ]).execute(),
