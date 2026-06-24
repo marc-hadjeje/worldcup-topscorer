@@ -1,55 +1,60 @@
-# Fabric — Pipeline de mise à jour des stats
+# Fabric — Stats update pipeline
 
-Met à jour automatiquement `dbo.Players` (buts + matchs joués) de la base SQL Rayfin
-à partir de la **Zafronix World Cup API**, toutes les 3 heures.
+Automatically updates `dbo.Players` (goals + matches played) of the Rayfin SQL
+database from the **Zafronix World Cup API**, every 3 hours.
 
-## Items déployés (workspace `wks-demo-worldcup`)
+## Deployed items (workspace `wks-demo-worldcup`)
 
-| Item | Type | Rôle |
+| Item | Type | Role |
 |---|---|---|
-| `update-worldcup-stats` | Notebook | Appel API → agrégation → `UPDATE dbo.Players` (T-SQL paramétré) |
-| `pl-update-worldcup-stats` | Data Pipeline | Exécute le notebook · schedule toutes les 3h |
-| `zafronix-wc-key` | Secret Key Vault | Clé API (jamais en dur) |
+| `update-worldcup-stats` | Notebook | API call → aggregation → `UPDATE dbo.Players` (parameterized T-SQL) |
+| `pl-update-worldcup-stats` | Data Pipeline | Runs the notebook · schedule every 3h |
+| `zafronix-wc-key` | Key Vault secret | API key (never hard-coded) |
 
-## Fichiers source
+## Source files
 
-| Fichier | Description |
+| File | Description |
 |---|---|
-| `build_notebook_zafronix.py` | Génère `notebook-content.ipynb` (source de vérité du notebook) |
-| `build_pipeline.py` | Génère `pipeline-content.json` |
-| `notebook-content.ipynb` | Définition du notebook (déployée via l'API Fabric) |
-| `pipeline-content.json` | Définition du pipeline + paramètres |
+| `build_notebook_zafronix.py` | Generates `notebook-content.ipynb` (notebook source of truth) |
+| `build_pipeline.py` | Generates `pipeline-content.json` |
+| `notebook-content.ipynb` | Notebook definition (deployed through the Fabric API) |
+| `pipeline-content.json` | Pipeline definition + parameters |
 
-## Fonctionnement du notebook
+## How the notebook works
 
-1. Lit les paramètres `apiKey`, `apiHost` (`api.zafronix.com`), `season` (`2026`).
-2. Si `apiKey` est vide (cas du **schedule**), lit le secret depuis **Key Vault** via
+1. Reads the parameters `apiKey`, `apiHost` (`api.zafronix.com`), `season` (`2026`).
+2. If `apiKey` is empty (the **schedule** case), it reads the secret from **Key Vault** via
    `notebookutils.credentials.getSecret(KEYVAULT_URL, "zafronix-wc-key")`.
-3. `GET /fifa/worldcup/v1/matches?year=2026` → agrège buts + apparitions par joueur
-   sur les matchs `finished` (matching de noms tolérant aux accents / noms composés).
-4. Se connecte à la **Fabric SQL Database** avec un token AAD
+3. `GET /fifa/worldcup/v1/matches?year=2026` → aggregates goals + appearances per player
+   over the `finished` matches.
+4. **Scorer-name cleaning**: scorer strings carry noise (`Havertz 45+5' pen`,
+   `Kane 12' pen`, `Al-Arab 76' o.g`). The minute/penalty suffix is stripped,
+   **own goals are excluded**, and matching is accent-insensitive and tolerant of
+   compound surnames and leading initials (`J. David`).
+5. Connects to the **Fabric SQL Database** with an AAD token
    (`notebookutils.credentials.getToken('https://database.windows.net/')`, ODBC Driver 18).
-5. `UPDATE dbo.Players SET goals = ?, matchesPlayed = ? WHERE id = ?` — paramétré.
-   `allTimeGoals` (historique) n'est jamais touché.
+6. **Purges** the current 2026 stats (`goals`, `matchesPlayed` reset to 0), then
+   `UPDATE dbo.Players SET goals = ?, matchesPlayed = ? WHERE id = ?` — parameterized.
+   `allTimeGoals` (historical) is never touched.
 
-## Redéployer après modification
+## Redeploy after a change
 
 ```powershell
-# 1. Régénérer la définition du notebook
+# 1. Regenerate the notebook definition
 python build_notebook_zafronix.py
 
-# 2. Mettre à jour la définition dans Fabric (API REST)
+# 2. Update the definition in Fabric (REST API)
 #    POST /v1/workspaces/{ws}/items/{notebookId}/updateDefinition
-#    body : { definition: { format: "ipynb", parts: [{ path, payload(base64), payloadType:"InlineBase64" }] } }
+#    body: { definition: { format: "ipynb", parts: [{ path, payload(base64), payloadType:"InlineBase64" }] } }
 ```
 
-## Exécution manuelle
+## Manual run
 
-Dans Fabric : ouvrir `pl-update-worldcup-stats` → **Run** → coller la clé dans le
-paramètre `apiKey` (ou laisser vide pour utiliser Key Vault).
+In Fabric: open `pl-update-worldcup-stats` → **Run** → paste the key into the
+`apiKey` parameter (or leave it empty to use Key Vault).
 
-## Sécurité
+## Security
 
-- La clé API n'est **ni dans le code, ni dans le repo** : Azure Key Vault uniquement.
-- Le paramètre `apiKey` du pipeline est marqué `secureInput` (non journalisé).
-- Les IDs de workspace / SQL Database ne sont pas des secrets (ressources, protégées par Entra ID).
+- The API key is **neither in the code nor in the repo**: Azure Key Vault only.
+- The pipeline `apiKey` parameter is marked `secureInput` (not logged).
+- Workspace / SQL Database IDs are not secrets (resources, protected by Entra ID).

@@ -3,6 +3,7 @@ import { client, fabricOptions } from "./rayfinClient.js";
 import { ensureSignedInWithFabric, initEmbeddedAuth } from "@microsoft/rayfin-auth-provider-fabric";
 import { Leaderboard } from "./Leaderboard.js";
 import { TeamFilter } from "./TeamFilter.js";
+import { useI18n, LanguageToggle } from "./i18n.js";
 
 interface Player {
   id: string;
@@ -37,6 +38,7 @@ interface Favorite {
 }
 
 export function App() {
+  const { t } = useI18n();
   const [players, setPlayers] = useState<Player[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -74,7 +76,7 @@ export function App() {
       const session = await ensureSignedInWithFabric(client.auth, fabricOptions);
       if (session) setIsAuthenticated(true);
     } catch (e: any) {
-      setError(e.message ?? "Erreur d'authentification");
+      setError(e.message ?? t("authError"));
     } finally {
       setSigningIn(false);
     }
@@ -99,7 +101,7 @@ export function App() {
       setTeams(teamsRes as any);
       setFavorites(favsRes as any);
     } catch (e: any) {
-      setError(e.message ?? "Erreur de chargement");
+      setError(e.message ?? t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -116,7 +118,7 @@ export function App() {
       setFavPlayerId("");
       await loadData();
     } catch (e: any) {
-      setError(e.message ?? "Erreur lors de l'ajout du favori");
+      setError(e.message ?? t("addFavError"));
     }
   }
 
@@ -131,14 +133,17 @@ export function App() {
     return (
       <div className="app">
         <header>
-          <h1>🏆 Coupe du Monde 2026</h1>
-          <p className="subtitle">Classement des Meilleurs Buteurs</p>
+          <div className="header-top">
+            <h1>{t("appTitle")}</h1>
+            <LanguageToggle />
+          </div>
+          <p className="subtitle">{t("subtitleLogin")}</p>
         </header>
         <div className="login-card">
-          <p>Connectez-vous avec votre compte Microsoft Fabric pour accéder au classement.</p>
+          <p>{t("loginPrompt")}</p>
           {error && <p className="login-error">{error}</p>}
           <button className="login-btn" onClick={handleSignIn} disabled={signingIn}>
-            {signingIn ? "Connexion en cours..." : "🔐 Se connecter avec Fabric"}
+            {signingIn ? t("signingIn") : t("signIn")}
           </button>
         </div>
       </div>
@@ -149,7 +154,7 @@ export function App() {
     return (
       <div className="loading">
         <div className="spinner" />
-        <p>Chargement des données...</p>
+        <p>{t("loading")}</p>
       </div>
     );
   }
@@ -157,9 +162,9 @@ export function App() {
   if (error) {
     return (
       <div className="error">
-        <h2>⚠️ Erreur</h2>
+        <h2>{t("errorTitle")}</h2>
         <p>{error}</p>
-        <button onClick={loadData}>Réessayer</button>
+        <button onClick={loadData}>{t("retry")}</button>
       </div>
     );
   }
@@ -167,30 +172,33 @@ export function App() {
   return (
     <div className="app">
       <header>
-        <h1>🏆 Coupe du Monde 2026</h1>
-        <p className="subtitle">USA · Mexique · Canada</p>
+        <div className="header-top">
+          <h1>{t("appTitle")}</h1>
+          <LanguageToggle />
+        </div>
+        <p className="subtitle">{t("subtitleHost")}</p>
       </header>
 
       <div className="stats-bar">
         <div className="stat">
           <span className="stat-value">{players.length}</span>
-          <span className="stat-label">Joueurs</span>
+          <span className="stat-label">{t("players")}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{teams.length}</span>
-          <span className="stat-label">Équipes</span>
+          <span className="stat-label">{t("teams")}</span>
         </div>
         <div className="stat">
           <span className="stat-value">
             {players.reduce((s, p) => s + p.goals, 0)}
           </span>
-          <span className="stat-label">Buts 2026</span>
+          <span className="stat-label">{t("goals2026")}</span>
         </div>
       </div>
 
       {/* Favorites */}
       <div className="favorites-section">
-        <h2>⭐ Favoris</h2>
+        <h2>{t("favorites")}</h2>
         {favorites.length > 0 && (
           <div className="fav-list">
             {favorites.map((f) => {
@@ -202,14 +210,14 @@ export function App() {
               <div key={f.id} className="fav-row">
                 <div className="fav-player">
                   <span className="fav-player-name">
-                    ⚽ {player ? `${player.firstName} ` : ""}<strong>{player?.lastName ?? "Joueur inconnu"}</strong>
+                    ⚽ {player ? `${player.firstName} ` : ""}<strong>{player?.lastName ?? t("unknownPlayer")}</strong>
                     {teamCode ? ` (${teamCode})` : teamName ? ` (${teamName})` : ""}
                   </span>
                   {player && player.goals > 0 && (
-                    <span className="fav-goals">{player.goals} buts</span>
+                    <span className="fav-goals">{player.goals} {t("goalsWord")}</span>
                   )}
                 </div>
-                <span className="fav-user">choisi par <strong>{f.userName}</strong></span>
+                <span className="fav-user">{t("pickedBy")} <strong>{f.userName}</strong></span>
               </div>
               );
             })}
@@ -218,19 +226,19 @@ export function App() {
         <div className="fav-form">
           <input
             type="text"
-            placeholder="Ton prénom (ex: Marc)"
+            placeholder={t("firstNamePlaceholder")}
             value={favName}
             onChange={(e) => setFavName(e.target.value)}
           />
           <select value={favPlayerId} onChange={(e) => setFavPlayerId(e.target.value)}>
-            <option value="">Choisis ton buteur favori</option>
+            <option value="">{t("chooseScorer")}</option>
             {players.filter(p => p.goals > 0).map((p) => (
               <option key={p.id} value={p.id}>
-                {p.firstName} {p.lastName} — {p.goals} buts ({p["team.code"]})
+                {p.firstName} {p.lastName} — {p.goals} {t("goalsWord")} ({p["team.code"]})
               </option>
             ))}
           </select>
-          <button onClick={addFavorite}>⭐ Voter</button>
+          <button onClick={addFavorite}>{t("vote")}</button>
         </div>
       </div>
 
@@ -240,13 +248,13 @@ export function App() {
           className={activeTab === "2026" ? "tab active" : "tab"}
           onClick={() => setActiveTab("2026")}
         >
-          🏟️ Coupe du Monde 2026
+          {t("tab2026")}
         </button>
         <button
           className={activeTab === "alltime" ? "tab active" : "tab"}
           onClick={() => setActiveTab("alltime")}
         >
-          🌍 Historique (toutes éditions)
+          {t("tabAllTime")}
         </button>
       </div>
 

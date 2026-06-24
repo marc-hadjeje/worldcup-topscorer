@@ -1,50 +1,56 @@
 # Architecture — World Cup Top Scorer
 
-Une application web temps réel qui affiche le classement des **meilleurs buteurs de la Coupe du Monde 2026**, construite de bout en bout sur **[Rayfin](https://aka.ms/rayfin)** et **Microsoft Fabric**.
+A real-time web app that shows the **World Cup 2026 top-scorers** leaderboard, built end to end on **[Rayfin](https://aka.ms/rayfin)** and **Microsoft Fabric**.
 
-> 💡 **Le point clé : Rayfin fournit en une seule commande la base de données, l'authentification (Fabric SSO) et l'hébergement statique.** Pas d'infra à gérer — on code, Rayfin déploie sur Fabric.
+> 💡 **The key point: Rayfin provides the database, authentication (Fabric SSO) and static hosting in a single command.** No infrastructure to manage — you write code, Rayfin deploys to Fabric.
 
-## Vue d'ensemble
+## Overview
 
 ```mermaid
 flowchart LR
-    subgraph FABRIC["Rafraîchissement des stats · Microsoft Fabric"]
+    subgraph FABRIC["Stats refresh · Microsoft Fabric"]
         direction LR
-        API["Zafronix WC API<br/>buts &amp; matchs 2026"]
-        PL["Fabric Data Pipeline<br/><b>pl-update-worldcup-stats</b><br/>schedule : toutes les 3h"]
-        NB["Fabric Notebook<br/><b>update-worldcup-stats</b><br/>Python : agrège + UPSERT"]
+        API["Zafronix WC API<br/>2026 goals &amp; matches"]
+        PL["Fabric Data Pipeline<br/><b>pl-update-worldcup-stats</b><br/>schedule: every 3h"]
+        NB["Fabric Notebook<br/><b>update-worldcup-stats</b><br/>Python: aggregate + UPSERT"]
         KV["Azure Key Vault<br/>zafronix-wc-key (secret)"]
         API --> PL --> NB
         KV -. getSecret .-> NB
     end
 
     SQL[("Fabric SQL Database<br/><b>Rayfin BaaS</b> · mssql<br/>dbo.Players / Teams / Goals")]
-    NB -- "UPDATE (T-SQL, token AAD)" --> SQL
+    NB -- "UPDATE (T-SQL, AAD token)" --> SQL
 
-    subgraph RAYFIN["Application web · Rayfin"]
+    subgraph RAYFIN["Web application · Rayfin"]
         direction LR
         CLIENT["Rayfin Client<br/>React + Vite<br/>Fabric SSO · read:data"]
         HOST["Rayfin Static Hosting<br/>(dist/)"]
-        USERS["Utilisateurs<br/>(navigateur)"]
+        USERS["Users<br/>(browser)"]
         CLIENT --> HOST --> USERS
     end
 
     SQL -- "read:data (Rayfin)" --> CLIENT
 ```
 
-> Schéma éditable : [`architecture.excalidraw`](./architecture.excalidraw) (ouvrir dans <https://aka.ms/excalidraw>).
+> Editable diagram: [`architecture.excalidraw`](./architecture.excalidraw) (open in <https://aka.ms/excalidraw>). A rendered PNG is available at [`architecture.png`](./architecture.png).
 
-## Les deux plans
+## App preview
 
-### 1. Le plan applicatif — **100 % Rayfin**
-
-| Service Rayfin | Rôle dans l'app | Config (`rayfin/rayfin.yml`) |
+| Sign-in (Fabric SSO) | Leaderboard (FR) | Leaderboard (EN) |
 |---|---|---|
-| **Data (BaaS)** | Base SQL managée (dialect `mssql`) générée depuis les entités TypeScript décorées (`@entity`, `@uuid`, `@one`…) | `data.enabled: true` |
-| **Auth** | Authentification **Fabric SSO** + scopes `read:data` / `write:data` | `auth.fabric.enabled: true` |
-| **Static Hosting** | Build Vite (`dist/`) servi sur `*.webapp.fabricapps.net` | `staticHosting.enabled: true` |
+| ![Sign-in](screenshots/login.png) | ![Leaderboard FR](screenshots/leaderboard-fr.png) | ![Leaderboard EN](screenshots/leaderboard-en.png) |
 
-Les entités du modèle de données (dossier `rayfin/data/`) :
+## The two planes
+
+### 1. The application plane — **100 % Rayfin**
+
+| Rayfin service | Role in the app | Config (`rayfin/rayfin.yml`) |
+|---|---|---|
+| **Data (BaaS)** | Managed SQL database (`mssql` dialect) generated from the decorated TypeScript entities (`@entity`, `@uuid`, `@one`…) | `data.enabled: true` |
+| **Auth** | **Fabric SSO** authentication + `read:data` / `write:data` scopes | `auth.fabric.enabled: true` |
+| **Static Hosting** | Vite build (`dist/`) served on `*.webapp.fabricapps.net` | `staticHosting.enabled: true` |
+
+The data-model entities (`rayfin/data/` folder):
 
 ```
 Team   ── id, name, code, group
@@ -54,34 +60,35 @@ Goal   ── id, scorer_id → Player, minute, matchDescription, goalType, matc
 Favorite ── id, userName, player_id → Player
 ```
 
-À partir de ces classes, Rayfin **scaffolde et déploie** la base SQL sur Fabric, expose une API typée (`RayfinClient<AppSchema>`) et gère le SSO — sans écrire une ligne de SQL ni de backend.
+From these classes Rayfin **scaffolds and deploys** the SQL database on Fabric, exposes a typed API (`RayfinClient<AppSchema>`) and handles SSO — without writing a single line of SQL or backend code.
 
-### 2. Le plan data — **Microsoft Fabric** (voir [`/fabric`](../fabric))
+### 2. The data plane — **Microsoft Fabric** (see [`/fabric`](../fabric))
 
-Un pipeline planifié maintient les statistiques à jour automatiquement :
+A scheduled pipeline keeps the statistics up to date automatically:
 
-1. **Pipeline** `pl-update-worldcup-stats` se déclenche **toutes les 3 heures**.
-2. Il exécute le **Notebook** `update-worldcup-stats` (Python).
-3. Le notebook récupère sa clé API depuis **Azure Key Vault** (`notebookutils.credentials.getSecret`) — **aucun secret en dur**.
-4. Il appelle la **Zafronix World Cup API** (`/matches?year=2026`), agrège buts et apparitions par joueur depuis les matchs terminés (matching de noms tolérant aux accents et aux noms composés).
-5. Il écrit dans la **même base SQL Rayfin** via T-SQL paramétré (`UPDATE dbo.Players SET goals = ?, matchesPlayed = ?`), authentifié par un **token AAD** de l'identité runtime du notebook.
-6. Le champ historique `allTimeGoals` n'est jamais modifié.
+1. The **pipeline** `pl-update-worldcup-stats` triggers **every 3 hours**.
+2. It runs the **notebook** `update-worldcup-stats` (Python).
+3. The notebook reads its API key from **Azure Key Vault** (`notebookutils.credentials.getSecret`) — **no hard-coded secret**.
+4. It calls the **Zafronix World Cup API** (`/matches?year=2026`) and aggregates goals and appearances per player from the finished matches.
+5. **Scorer-name cleaning**: Zafronix scorer strings carry noise such as `Havertz 45+5' pen`, `Kane 12' pen` or `Al-Arab 76' o.g`. The notebook strips the minute/penalty suffixes, **excludes own goals**, and matches names tolerantly (accent-insensitive, compound surnames, leading initials like `J. David`).
+6. Before applying the new values it **purges** the current 2026 stats (`goals`, `matchesPlayed` reset to 0) so stale values are cleared, then writes back through parameterized T-SQL (`UPDATE dbo.Players SET goals = ?, matchesPlayed = ?`), authenticated by an **AAD token** from the notebook's runtime identity.
+7. The historical `allTimeGoals` field is never modified.
 
-L'app Rayfin lit ensuite ces données rafraîchies via le BaaS — la boucle est bouclée.
+The Rayfin app then reads this refreshed data through the BaaS — the loop is closed.
 
-## Sécurité
+## Security
 
-- **Aucun secret dans le code ou le repo.** La clé API vit dans **Azure Key Vault** (`kv-wc-*`, secret `zafronix-wc-key`). Le notebook la lit au runtime ; elle peut aussi être passée en paramètre sécurisé du pipeline (`apiKey`) pour un run manuel.
-- **Auth de bout en bout via Fabric / Entra ID** : le frontend via Fabric SSO, l'accès SQL via token AAD, Key Vault via access policy.
-- `.gitignore` exclut `.env*`, `rayfin/.env*`, `rayfin/.deployments.json` et tous les fichiers `*.local`.
+- **No secret in the code or the repo.** The API key lives in **Azure Key Vault** (`kv-wc-*`, secret `zafronix-wc-key`). The notebook reads it at runtime; it can also be passed as a secure pipeline parameter (`apiKey`) for a manual run.
+- **End-to-end auth through Fabric / Entra ID**: the frontend via Fabric SSO, SQL access via AAD token, Key Vault via access policy.
+- `.gitignore` excludes `.env*`, `rayfin/.env*`, `rayfin/.deployments.json` and all `*.local` files.
 
 ## Stack
 
-| Couche | Techno |
+| Layer | Technology |
 |---|---|
 | Frontend | React 19, Vite 8, TypeScript |
-| Plateforme app | **Rayfin** (BaaS SQL, Auth Fabric SSO, Static Hosting) |
-| Données | Microsoft Fabric SQL Database |
+| App platform | **Rayfin** (SQL BaaS, Fabric SSO Auth, Static Hosting) |
+| Data | Microsoft Fabric SQL Database |
 | Orchestration | Fabric Data Pipeline + Notebook (Python) |
 | Secrets | Azure Key Vault |
-| Source de données | Zafronix World Cup API |
+| Data source | Zafronix World Cup API |

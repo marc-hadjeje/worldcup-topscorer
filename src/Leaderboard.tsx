@@ -1,4 +1,5 @@
 import React from "react";
+import { useI18n } from "./i18n.js";
 
 interface Player {
   id: string;
@@ -131,6 +132,7 @@ function PlayerAvatar({ player }: { player: Player }) {
 }
 
 export function Leaderboard({ players, mode, favorites = [] }: Props) {
+  const { t } = useI18n();
   const isAllTime = mode === "alltime";
   // Count votes per player
   const voteCounts: Record<string, number> = {};
@@ -143,13 +145,13 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
         <thead>
           <tr>
             <th className="rank">#</th>
-            <th className="player">Joueur</th>
-            <th className="team">Équipe</th>
-            <th className="num">{isAllTime ? "Buts (total)" : "Buts 2026"}</th>
-            {!isAllTime && <th className="num">Assists</th>}
-            <th className="num">Matchs</th>
-            <th className="num">Ratio</th>
-            <th className="num">Votes</th>
+            <th className="player">{t("colPlayer")}</th>
+            <th className="team">{t("colTeam")}</th>
+            <th className="num">{isAllTime ? t("colGoalsTotal") : t("colGoals2026")}</th>
+            {!isAllTime && <th className="num">{t("colAssists")}</th>}
+            <th className="num">{t("colMatches")}</th>
+            <th className="num">{t("colRatio")}</th>
+            <th className="num">{t("colVotes")}</th>
           </tr>
         </thead>
         <tbody>

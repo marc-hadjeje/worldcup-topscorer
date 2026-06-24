@@ -1,4 +1,5 @@
 import React from "react";
+import { useI18n } from "./i18n.js";
 
 interface Team {
   id: string;
@@ -37,13 +38,14 @@ const FLAGS: Record<string, string> = {
 };
 
 export function TeamFilter({ teams, selected, onSelect }: Props) {
+  const { t } = useI18n();
   return (
     <div className="team-filter">
       <button
         className={selected === null ? "active" : ""}
         onClick={() => onSelect(null)}
       >
-        Tous
+        {t("filterAll")}
       </button>
       {teams.map((t) => (
         <button

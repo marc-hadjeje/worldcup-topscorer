@@ -1,63 +1,66 @@
 # ⚽ World Cup Top Scorer
 
-Application web temps réel du **classement des meilleurs buteurs de la Coupe du Monde 2026**, construite de bout en bout sur **[Rayfin](https://aka.ms/rayfin)** et **Microsoft Fabric**.
+A real-time web app showing the **World Cup 2026 top-scorers leaderboard**, built end to end on **[Rayfin](https://aka.ms/rayfin)** and **Microsoft Fabric**.
 
-Rayfin fournit en une commande **la base de données, l'authentification (Fabric SSO) et l'hébergement** — toute l'infra est managée sur Fabric. Un pipeline Fabric planifié garde les statistiques à jour automatiquement.
+Rayfin provides the **database, authentication (Fabric SSO) and hosting** in a single command — the whole infrastructure is managed on Fabric. A scheduled Fabric pipeline keeps the statistics up to date automatically.
 
-📐 **Architecture détaillée → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**
+🌐 The UI is **bilingual (FR / EN)** with a one-click language toggle.
 
-## Fonctionnalités
+📐 **Detailed architecture → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**
 
-- 🏆 Classement des buteurs **CDM 2026** + classement **all-time** (légendes incluses)
-- 🖼️ Photos et drapeaux des joueurs
-- ⭐ Système de favoris avec vote nominatif
-- 🔄 Stats rafraîchies **automatiquement toutes les 3h** via un pipeline Fabric
-- 🔐 Authentification **Fabric SSO**, aucun secret dans le code
+## Features
+
+- 🏆 **WC 2026** scorers leaderboard + **all-time** leaderboard (legends included)
+- 🌐 **FR / EN** language switch (persisted in `localStorage`)
+- 🖼️ Player photos and flags
+- ⭐ Favourites with named voting
+- 🔄 Stats refreshed **automatically every 3 hours** through a Fabric pipeline
+- 🔐 **Fabric SSO** authentication, no secret in the code
 
 ## Stack
 
-React 19 · Vite · TypeScript · **Rayfin** (BaaS SQL + Auth + Hosting) · Microsoft Fabric (SQL Database, Data Pipeline, Notebook) · Azure Key Vault
+React 19 · Vite · TypeScript · **Rayfin** (SQL BaaS + Auth + Hosting) · Microsoft Fabric (SQL Database, Data Pipeline, Notebook) · Azure Key Vault
 
 ## Structure
 
 ```
 .
-├── src/                 # Frontend React (App, Leaderboard, TeamFilter, rayfinClient)
+├── src/                 # React frontend (App, Leaderboard, TeamFilter, i18n, rayfinClient)
 ├── rayfin/
-│   ├── data/            # Entités du modèle (Team, Player, Goal, Favorite)
-│   └── rayfin.yml       # Config Rayfin : auth, data (mssql), static hosting
-├── scripts/seed.ts      # Seed des données via l'API Rayfin
-├── fabric/              # Pipeline + Notebook Fabric de mise à jour des stats
-└── docs/                # Architecture + schéma
+│   ├── data/            # Data model entities (Team, Player, Goal, Favorite)
+│   └── rayfin.yml       # Rayfin config: auth, data (mssql), static hosting
+├── scripts/seed.ts      # Data seeding through the Rayfin API
+├── fabric/              # Fabric Pipeline + Notebook that refresh the stats
+└── docs/                # Architecture + diagram + screenshots
 ```
 
-## Démarrer
+## Getting started
 
-> Prérequis : Node 18+, Rayfin CLI (`npx @microsoft/rayfin-cli`), accès à un workspace Microsoft Fabric.
+> Prerequisites: Node 18+, Rayfin CLI (`npx @microsoft/rayfin-cli`), access to a Microsoft Fabric workspace.
 
 ```bash
 npm install
 
-# Génère les variables d'env Rayfin (.env.local) depuis rayfin/.env
+# Generate the Rayfin env variables (.env.local) from rayfin/.env
 npx rayfin env --framework vite
 
-# Lance le frontend en dev
+# Run the frontend in dev mode
 npm run dev
 
-# Build de production (servi par Rayfin Static Hosting)
+# Production build (served by Rayfin Static Hosting)
 npm run build
 ```
 
-Déploiement de l'app (data + auth + hosting) sur Fabric via la Rayfin CLI :
+Deploy the app (data + auth + hosting) to Fabric with the Rayfin CLI:
 
 ```bash
 npx rayfin deploy
 ```
 
-## Mise à jour automatique des stats (Fabric)
+## Automatic stats update (Fabric)
 
-Le dossier [`fabric/`](fabric) contient le **Notebook** et le **Data Pipeline** qui rafraîchissent `dbo.Players` (buts, matchs joués) depuis la Zafronix World Cup API, planifiés toutes les 3h, avec la clé API stockée dans **Azure Key Vault**. Détails et redéploiement : [`fabric/README.md`](fabric/README.md).
+The [`fabric/`](fabric) folder contains the **Notebook** and **Data Pipeline** that refresh `dbo.Players` (goals, matches played) from the Zafronix World Cup API, scheduled every 3 hours, with the API key stored in **Azure Key Vault**. Details and redeployment: [`fabric/README.md`](fabric/README.md).
 
-## Sécurité
+## Security
 
-Aucun secret n'est versionné. Les clés API vivent dans Azure Key Vault, les fichiers `.env*`, `rayfin/.env*`, `rayfin/.deployments.json` et `*.local` sont ignorés par git. Le `publishableKey` Rayfin (`pk-…`) est une clé publique côté client, sans risque.
+No secret is committed. API keys live in Azure Key Vault; the `.env*`, `rayfin/.env*`, `rayfin/.deployments.json` and `*.local` files are git-ignored. The Rayfin `publishableKey` (`pk-…`) is a public client-side key and is safe to commit.

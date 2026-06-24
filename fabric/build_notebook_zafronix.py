@@ -68,6 +68,23 @@ def last_token(norm_name):
     parts = [p for p in norm_name.split(" ") if p]
     return parts[-1] if parts else ""
 
+def clean_scorer(s):
+    # Zafronix scorer strings carry noise: "Havertz 45+5' pen", "Kane 12' pen",
+    # "Al-Arab 76' o.g". Keep only the name part; drop own goals entirely.
+    if not s:
+        return None
+    low = s.lower()
+    if "o.g" in low or "(og)" in low or low.endswith(" og"):
+        return None
+    out = []
+    for tk in s.split():
+        if any(c.isdigit() for c in tk) or "'" in tk or "+" in tk:
+            break
+        if tk.lower() in ("pen", "pen.", "p.", "o.g", "og"):
+            break
+        out.append(tk)
+    return " ".join(out) if out else None
+
 # appearances: how many finished matches each lineup player featured in (started or named)
 appearances = {}          # normFull -> count
 display_name = {}         # normFull -> original display name
@@ -87,23 +104,25 @@ for m in finished:
             display_name.setdefault(nf, nm)
             side_norm[side].append(nf)
     for g in (m.get("goals") or []):
-        scorer = g.get("scorer")
-        if not scorer:
+        scorer = clean_scorer(g.get("scorer"))
+        if scorer is None:                 # empty or own goal -> not credited
             continue
         ns = normalize(scorer)
+        ns_last = last_token(ns)
         team_side = g.get("team")  # "home" | "away"
-        resolved = None
         candidates = side_norm.get(team_side, []) if team_side in side_norm else (side_norm["home"] + side_norm["away"])
-        # match the surname against the scoring side's lineup by last token (or substring)
-        hits = [nf for nf in candidates if last_token(nf) == ns or ns in nf.split(" ")]
-        if len(hits) == 1:
-            resolved = hits[0]
-        elif len(hits) > 1:
-            resolved = hits[0]
-        if resolved:
-            goals_by_full[resolved] = goals_by_full.get(resolved, 0) + 1
+        # match the surname against the scoring side's lineup by last token (or as a token)
+        hits = [nf for nf in candidates if last_token(nf) == ns_last or ns_last in nf.split(" ")]
+        # if the scorer is given as "J. David", disambiguate by the leading initial
+        if len(hits) > 1 and len(ns.split(" ")[0].replace(".", "")) == 1:
+            ini = ns.split(" ")[0][0]
+            f = [nf for nf in hits if nf and nf[0] == ini]
+            if f:
+                hits = f
+        if hits:
+            goals_by_full[hits[0]] = goals_by_full.get(hits[0], 0) + 1
         else:
-            goals_by_surname[ns] = goals_by_surname.get(ns, 0) + 1
+            goals_by_surname[ns_last] = goals_by_surname.get(ns_last, 0) + 1
 
 print(f"Aggregated appearances for {len(appearances)} players; goal-scorers (resolved): {len(goals_by_full)}, (unresolved surnames): {len(goals_by_surname)}")
 '''))
@@ -129,6 +148,9 @@ for nf in appearances:
     zaf_by_last.setdefault(last_token(nf), []).append(nf)
 
 updated, unmatched = [], []
+# PURGE: reset 2026 stats so stale/removed values are cleared before re-aggregation.
+# allTimeGoals (historical) and assists are left untouched.
+cur.execute("UPDATE dbo.Players SET goals = 0, matchesPlayed = 0")
 for r in players:
     db_first = normalize(r.firstName)
     db_last_full = normalize(r.lastName)          # e.g. "de andrade"

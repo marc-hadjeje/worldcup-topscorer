@@ -51,6 +51,51 @@ header h1 {
   margin-top: 0.25rem;
 }
 
+/* Header top row + language toggle */
+.header-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lang-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-toggle button {
+  padding: 0.3rem 0.7rem;
+  background: var(--card);
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lang-toggle button:hover {
+  background: var(--secondary);
+}
+
+.lang-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .header-top { flex-direction: column; gap: 0.5rem; }
+  .lang-toggle { position: static; transform: none; }
+}
+
 /* Stats bar */
 .stats-bar {
   display: flex;

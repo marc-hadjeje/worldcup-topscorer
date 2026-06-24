@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph FABRIC["Stats refresh - Microsoft Fabric"]
+        direction LR
+        API["Zafronix WC API<br/>2026 goals and matches"]
+        PL["Fabric Data Pipeline<br/>pl-update-worldcup-stats<br/>schedule: every 3h"]
+        NB["Fabric Notebook<br/>update-worldcup-stats<br/>Python: aggregate + UPSERT"]
+        KV["Azure Key Vault<br/>zafronix-wc-key (secret)"]
+        API --> PL --> NB
+        KV -. getSecret .-> NB
+    end
+
+    SQL[("Fabric SQL Database<br/>Rayfin BaaS - mssql<br/>dbo.Players / Teams / Goals")]
+    NB -- "UPDATE (T-SQL, AAD token)" --> SQL
+
+    subgraph RAYFIN["Web application - Rayfin"]
+        direction LR
+        CLIENT["Rayfin Client<br/>React + Vite<br/>Fabric SSO - read:data"]
+        HOST["Rayfin Static Hosting<br/>(dist/)"]
+        USERS["Users<br/>(browser)"]
+        CLIENT --> HOST --> USERS
+    end
+
+    SQL -- "read:data (Rayfin)" --> CLIENT
+
+    classDef fabric fill:#CFE4FA,stroke:#0078D4,color:#000;
+    classDef rayfin fill:#E8DAEF,stroke:#5C2D91,color:#000;
+    classDef data fill:#DFF6DD,stroke:#107C10,color:#000;
+    class API,PL,NB,KV fabric;
+    class CLIENT,HOST,USERS rayfin;
+    class SQL data;
