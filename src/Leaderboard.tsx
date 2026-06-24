@@ -21,10 +21,17 @@ interface Favorite {
   player_id: string;
 }
 
+interface Team {
+  id: string;
+  name: string;
+  code: string;
+}
+
 interface Props {
   players: Player[];
   mode: "2026" | "alltime";
   favorites?: Favorite[];
+  teams?: Team[];
 }
 
 const FLAGS: Record<string, string> = {
@@ -102,8 +109,64 @@ const PLAYER_IMAGES: Record<string, string> = {
   "Ramos": "https://r2.thesportsdb.com/images/media/player/cutout/47dx051766335509.png",
 };
 
-function PlayerAvatar({ player }: { player: Player }) {
-  const code = player["team.code"] ?? "";
+// Nationality fallback for historical legends (and players) whose record has no
+// team relation in the data. Keyed by "firstName lastName" (trimmed). Used only
+// when team.code is empty, to fill the Team column (esp. in the all-time view).
+const LEGEND_NATION: Record<string, string> = {
+  "Lionel Messi": "ARG",
+  "Kylian Mbappé": "FRA",
+  "Miroslav Klose": "GER",
+  "Ronaldo Nazário": "BRA",
+  "Gerd Müller": "GER",
+  "Just Fontaine": "FRA",
+  "Pelé": "BRA",
+  "Jürgen Klinsmann": "GER",
+  "Sándor Kocsis": "HUN",
+  "Thomas Müller": "GER",
+  "Grzegorz Lato": "POL",
+  "Gary Lineker": "ENG",
+  "Teófilo Cubillas": "PER",
+  "Gabriel Batistuta": "ARG",
+  "Harry Kane": "ENG",
+  "Cody Gakpo": "NED",
+  "Julián Álvarez": "ARG",
+  "Erling Haaland": "NOR",
+  "Antoine Griezmann": "FRA",
+  "Jonathan David": "CAN",
+  "Bukayo Saka": "ENG",
+  "Deniz Undav": "GER",
+  "Gonçalo Ramos": "POR",
+  "Álvaro Morata": "ESP",
+  "Daichi Kamada": "JPN",
+  "Crysencio Summerville": "NED",
+  "Ismael Saibari": "MAR",
+  "Vinícius Júnior": "BRA",
+  "Folarin Balogun": "USA",
+  "Neymar Jr": "BRA",
+  "Richarlison de Andrade": "BRA",
+  "Matheus Cunha": "BRA",
+  "Mikel Oyarzabal": "ESP",
+  "Cyle Larin": "CAN",
+  "Ismaïla Sarr": "SEN",
+  "Brian Brobbey": "NED",
+  "Maxi Araújo": "URU",
+  "Ayase Ueda": "JPN",
+  "Kai Havertz": "GER",
+  "Youssef En-Nesyri": "MAR",
+  "Jamal Musiala": "GER",
+};
+
+// Built-in French nation names, fallback when the code is not in the loaded teams.
+const NATION_NAMES: Record<string, string> = {
+  FRA: "France", ARG: "Argentine", BRA: "Brésil", ENG: "Angleterre",
+  GER: "Allemagne", ESP: "Espagne", POR: "Portugal", NED: "Pays-Bas",
+  USA: "États-Unis", MEX: "Mexique", CAN: "Canada", MAR: "Maroc",
+  JPN: "Japon", COL: "Colombie", URU: "Uruguay", SEN: "Sénégal",
+  NOR: "Norvège", HUN: "Hongrie", POL: "Pologne", PER: "Pérou",
+};
+
+function PlayerAvatar({ player, teamCode }: { player: Player; teamCode?: string }) {
+  const code = teamCode || player["team.code"] || "";
   const bgColor = TEAM_COLORS[code] ?? "#374151";
   const initials = `${player.firstName[0]}${player.lastName[0]}`;
   const imgUrl = PLAYER_IMAGES[player.lastName];
@@ -131,7 +194,7 @@ function PlayerAvatar({ player }: { player: Player }) {
   );
 }
 
-export function Leaderboard({ players, mode, favorites = [] }: Props) {
+export function Leaderboard({ players, mode, favorites = [], teams = [] }: Props) {
   const { t } = useI18n();
   const isAllTime = mode === "alltime";
   // Count votes per player
@@ -139,6 +202,22 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
   favorites.forEach((f) => {
     voteCounts[f.player_id] = (voteCounts[f.player_id] || 0) + 1;
   });
+  // Resolve a display team (code + name) for a player, falling back to the
+  // legend nationality map when the record has no team relation.
+  const teamNameByCode: Record<string, string> = {};
+  teams.forEach((tm) => { if (tm.code) teamNameByCode[tm.code] = tm.name; });
+  const resolveTeam = (p: Player): { code: string; name: string } => {
+    let code = p["team.code"] ?? "";
+    let name = p["team.name"] ?? "";
+    if (!code) {
+      const fallback = LEGEND_NATION[`${p.firstName} ${p.lastName}`.trim()];
+      if (fallback) {
+        code = fallback;
+        name = teamNameByCode[fallback] ?? NATION_NAMES[fallback] ?? "";
+      }
+    }
+    return { code, name };
+  };
   return (
     <div className="leaderboard">
       <table>
@@ -157,13 +236,14 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
         <tbody>
           {players.map((p, i) => {
             const goalsDisplay = isAllTime ? p.allTimeGoals : p.goals;
+            const team = resolveTeam(p);
             return (
             <tr key={p.id} className={i < 3 ? `top-${i + 1}` : ""}>
               <td className="rank">
                 {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
               </td>
               <td className="player-cell">
-                <PlayerAvatar player={p} />
+                <PlayerAvatar player={p} teamCode={team.code} />
                 <div className="player-info">
                   <span className="player-name">
                     {p.firstName} <strong>{p.lastName}</strong>
@@ -174,7 +254,7 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
                 </div>
               </td>
               <td className="team">
-                {FLAGS[p["team.code"] ?? ""] ?? ""} {p["team.name"] ?? ""}
+                {FLAGS[team.code] ?? ""} {team.name}
               </td>
               <td className="num goals-cell">{goalsDisplay}</td>
               {!isAllTime && <td className="num">{p.assists}</td>}

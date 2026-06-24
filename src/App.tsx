@@ -360,9 +360,9 @@ export function App() {
       <TeamFilter teams={teams} selected={selectedTeam} onSelect={setSelectedTeam} />
 
       {activeTab === "2026" ? (
-      <Leaderboard players={filtered} mode="2026" favorites={favorites} />
+      <Leaderboard players={filtered} mode="2026" favorites={favorites} teams={teams} />
       ) : (
-      <Leaderboard players={allTimeSorted} mode="alltime" favorites={favorites} />
+      <Leaderboard players={allTimeSorted} mode="alltime" favorites={favorites} teams={teams} />
       )}
     </div>
   );
