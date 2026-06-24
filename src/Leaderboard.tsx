@@ -149,8 +149,8 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
             <th className="team">{t("colTeam")}</th>
             <th className="num">{isAllTime ? t("colGoalsTotal") : t("colGoals2026")}</th>
             {!isAllTime && <th className="num">{t("colAssists")}</th>}
-            <th className="num">{t("colMatches")}</th>
-            <th className="num">{t("colRatio")}</th>
+            {!isAllTime && <th className="num">{t("colMatches")}</th>}
+            {!isAllTime && <th className="num">{t("colRatio")}</th>}
             <th className="num">{t("colVotes")}</th>
           </tr>
         </thead>
@@ -178,12 +178,14 @@ export function Leaderboard({ players, mode, favorites = [] }: Props) {
               </td>
               <td className="num goals-cell">{goalsDisplay}</td>
               {!isAllTime && <td className="num">{p.assists}</td>}
-              <td className="num">{p.matchesPlayed}</td>
-              <td className="num">
-                {p.matchesPlayed > 0
-                  ? (goalsDisplay / p.matchesPlayed).toFixed(2)
-                  : "–"}
-              </td>
+              {!isAllTime && <td className="num">{p.matchesPlayed}</td>}
+              {!isAllTime && (
+                <td className="num">
+                  {p.matchesPlayed > 0
+                    ? (goalsDisplay / p.matchesPlayed).toFixed(2)
+                    : "–"}
+                </td>
+              )}
               <td className="num votes-cell">
                 {voteCounts[p.id] ? "⭐".repeat(voteCounts[p.id]) : ""}
               </td>
