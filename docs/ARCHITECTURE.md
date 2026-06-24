@@ -36,9 +36,11 @@ flowchart LR
 
 ## App preview
 
-| Sign-in (Fabric SSO) | Leaderboard (FR) | Leaderboard (EN) |
-|---|---|---|
-| ![Sign-in](screenshots/login.png) | ![Leaderboard FR](screenshots/leaderboard-fr.png) | ![Leaderboard EN](screenshots/leaderboard-en.png) |
+![World Cup Top Scorer — leaderboard, votes and favourites](screenshots/app-en.png)
+
+| Sign-in (Fabric SSO) | Leaderboard (FR) |
+|---|---|
+| ![Sign-in](screenshots/login.png) | ![Leaderboard FR](screenshots/app-fr.png) |
 
 ## The two planes
 
