@@ -53,6 +53,33 @@ export function App() {
   const [favName, setFavName] = useState("");
   const [favPlayerId, setFavPlayerId] = useState("");
 
+  // Access request form (login screen)
+  const ACCESS_EMAIL = "marc.hadjeje@microsoft.com";
+  const [showAccess, setShowAccess] = useState(false);
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessMsg, setAccessMsg] = useState("");
+  const [accessErr, setAccessErr] = useState<string | null>(null);
+
+  const sendAccessRequest = useCallback(() => {
+    const email = accessEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setAccessErr(t("accessEmailRequired"));
+      return;
+    }
+    setAccessErr(null);
+    const lines = [
+      t("accessMailIntro"),
+      "",
+      `${t("accessMailEmailLabel")}: ${email}`,
+    ];
+    if (accessMsg.trim()) lines.push(`${t("accessMailMsgLabel")}: ${accessMsg.trim()}`);
+    const href =
+      `mailto:${ACCESS_EMAIL}` +
+      `?subject=${encodeURIComponent(t("accessMailSubject"))}` +
+      `&body=${encodeURIComponent(lines.join("\n"))}`;
+    window.location.href = href;
+  }, [accessEmail, accessMsg, t]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -145,6 +172,42 @@ export function App() {
           <button className="login-btn" onClick={handleSignIn} disabled={signingIn}>
             {signingIn ? t("signingIn") : t("signIn")}
           </button>
+
+          {!showAccess ? (
+            <button
+              type="button"
+              className="access-link"
+              onClick={() => { setShowAccess(true); setAccessErr(null); }}
+            >
+              {t("askAccess")}
+            </button>
+          ) : (
+            <div className="access-form">
+              <h3>{t("accessTitle")}</h3>
+              <p className="access-hint">{t("accessHint")}</p>
+              <input
+                type="email"
+                placeholder={t("accessEmailPlaceholder")}
+                value={accessEmail}
+                onChange={(e) => setAccessEmail(e.target.value)}
+              />
+              <textarea
+                placeholder={t("accessMsgPlaceholder")}
+                value={accessMsg}
+                rows={3}
+                onChange={(e) => setAccessMsg(e.target.value)}
+              />
+              {accessErr && <p className="login-error">{accessErr}</p>}
+              <div className="access-actions">
+                <button type="button" className="access-cancel" onClick={() => setShowAccess(false)}>
+                  {t("cancel")}
+                </button>
+                <button type="button" className="access-send" onClick={sendAccessRequest}>
+                  {t("sendRequest")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

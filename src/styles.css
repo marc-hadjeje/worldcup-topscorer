@@ -332,6 +332,81 @@ td.player {
   transform: none;
 }
 
+/* Access request */
+.access-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.access-link:hover {
+  color: var(--gold);
+}
+
+.access-form {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+.access-form h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+.access-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.9rem !important;
+  line-height: 1.4;
+}
+.access-form input,
+.access-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.access-form textarea {
+  resize: vertical;
+}
+.access-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+.access-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.access-send {
+  background: linear-gradient(135deg, var(--gold), #e67e22);
+  color: var(--primary);
+  border: none;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.access-send:hover {
+  box-shadow: 0 4px 15px rgba(240, 165, 0, 0.3);
+}
+
 /* Player avatars */
 .player-cell {
   display: flex;
