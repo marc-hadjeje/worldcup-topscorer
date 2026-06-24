@@ -8,6 +8,22 @@ Rayfin provides the **database, authentication (Fabric SSO) and hosting** in a s
 
 📐 **Detailed architecture → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)**
 
+## Preview
+
+| Leaderboard (FR) | Leaderboard (EN) |
+|---|---|
+| ![Leaderboard FR](docs/screenshots/leaderboard-fr.png) | ![Leaderboard EN](docs/screenshots/leaderboard-en.png) |
+
+| Sign-in (Fabric SSO) |
+|---|
+| ![Sign-in](docs/screenshots/login.png) |
+
+## Architecture
+
+![Architecture](docs/architecture.png)
+
+> Editable diagram: [`docs/architecture.excalidraw`](docs/architecture.excalidraw) · full write-up in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ## Features
 
 - 🏆 **WC 2026** scorers leaderboard + **all-time** leaderboard (legends included)
