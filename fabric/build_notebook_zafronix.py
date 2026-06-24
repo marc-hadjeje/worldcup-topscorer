@@ -323,6 +323,93 @@ conn.close()
 print("done")
 '''))
 
+# 7. Resolve player photos from TheSportsDB (isolated: failures never affect stats)
+cells_src.append((None, r'''import time
+try:
+    # Reuse the AAD db token struct from the connect cell; open a fresh connection.
+    pconn = pyodbc.connect(
+        f"Driver={{{ODBC_DRIVER}}};Server={SERVER};Database={DATABASE};Encrypt=yes;TrustServerCertificate=no",
+        attrs_before={SQL_COPT_SS_ACCESS_TOKEN: token_struct}, timeout=60)
+    pcur = pconn.cursor()
+    # Idempotent guard: make sure the column exists.
+    pcur.execute("""
+        IF NOT EXISTS (SELECT 1 FROM sys.columns
+                       WHERE Name = N'photoUrl' AND Object_ID = Object_ID(N'dbo.Players'))
+        BEGIN ALTER TABLE dbo.Players ADD photoUrl NVARCHAR(500) NULL END""")
+    pconn.commit()
+
+    # FIFA code -> English nationality (reverse of NATION) to disambiguate namesakes
+    # such as the two Ronaldos (Brazil vs Portugal).
+    ENG_BY_CODE = {code.upper(): eng for eng, (code, _fr) in NATION.items()}
+    # TheSportsDB nationality strings differ slightly from Zafronix names.
+    TSDB_NATION = {
+        "USA": "United States", "England": "England", "Korea Republic": "South Korea",
+        "IR Iran": "Iran", "Congo DR": "DR Congo", "Czechia": "Czech Republic",
+        "Cabo Verde": "Cape Verde Islands", "Türkiye": "Turkey",
+    }
+    def expected_nationalities(code):
+        eng = ENG_BY_CODE.get((code or "").upper())
+        if not eng:
+            return set()
+        out = {eng}
+        if eng in TSDB_NATION:
+            out.add(TSDB_NATION[eng])
+        return {n.lower() for n in out}
+
+    # Players still missing a photo, with their team code for disambiguation.
+    pcur.execute("""
+        SELECT p.id, p.firstName, p.lastName, t.code
+        FROM dbo.Players p LEFT JOIN dbo.Teams t ON p.team_id = t.id
+        WHERE p.photoUrl IS NULL OR LTRIM(RTRIM(p.photoUrl)) = ''""")
+    todo = pcur.fetchall()
+    print(f"Photo resolution: {len(todo)} players without a photo")
+
+    def fetch_candidates(name):
+        try:
+            r = requests.get("https://www.thesportsdb.com/api/v1/json/3/searchplayers.php",
+                             params={"p": name}, timeout=20)
+            if r.status_code != 200:
+                return []
+            return (r.json() or {}).get("player") or []
+        except Exception as e:
+            print(f"  ! TSDB error for {name}: {e}")
+            return []
+
+    def pick_photo(cands, nats):
+        soccer = [c for c in cands if (c.get("strSport") or "").lower() == "soccer"]
+        pool = soccer or cands
+        if nats:
+            nat_hits = [c for c in pool if (c.get("strNationality") or "").lower() in nats]
+            if nat_hits:
+                pool = nat_hits
+        for c in pool:
+            for key in ("strCutout", "strRender", "strThumb"):
+                if c.get(key):
+                    return c[key]
+        return None
+
+    photo_set = 0
+    for r in todo:
+        full = f"{(r.firstName or '').strip()} {(r.lastName or '').strip()}".strip()
+        if not full:
+            continue
+        nats = expected_nationalities(r.code)
+        cands = fetch_candidates(full)
+        if not cands and r.lastName:
+            cands = fetch_candidates(r.lastName.strip())
+        photo = pick_photo(cands, nats)
+        if photo:
+            pcur.execute("UPDATE dbo.Players SET photoUrl = ? WHERE id = ?", photo, r.id)
+            photo_set += 1
+            print(f"  + PHOTO {full}: {photo[:60]}...")
+        time.sleep(1.2)  # be gentle with the free TheSportsDB key
+    pconn.commit()
+    pconn.close()
+    print(f"Photo resolution done: {photo_set}/{len(todo)} photos set")
+except Exception as e:
+    print(f"Photo resolution skipped (non-fatal): {e}")
+'''))
+
 def make_cell(tag, src):
     lines = src.splitlines(keepends=True)
     md = {}

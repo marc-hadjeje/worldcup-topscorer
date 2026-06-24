@@ -180,8 +180,10 @@ export function App() {
     ? players.filter((p) => p.team_id === selectedTeam)
     : players;
 
-  // 2026 tab: only real 2026 participants (scored or played this edition)
-  const season2026 = filtered.filter((p) => p.goals > 0 || p.matchesPlayed > 0);
+  // 2026 tab: only real 2026 participants (scored or played this edition), top 30 scorers
+  const season2026 = filtered
+    .filter((p) => p.goals > 0 || p.matchesPlayed > 0)
+    .slice(0, 30);
 
   // All-time tab: total = historical baseline (allTimeGoals) + live 2026 goals.
   const allTimeTotal = (p: typeof players[number]) =>
