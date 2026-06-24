@@ -55,18 +55,45 @@ export function App() {
 
   // Access request form (login screen)
   const ACCESS_EMAIL = "marc.hadjeje@microsoft.com";
+  const ACCESS_WEBHOOK = (import.meta as any).env?.VITE_ACCESS_WEBHOOK_URL as string | undefined;
   const [showAccess, setShowAccess] = useState(false);
   const [accessEmail, setAccessEmail] = useState("");
   const [accessMsg, setAccessMsg] = useState("");
   const [accessErr, setAccessErr] = useState<string | null>(null);
+  const [accessSending, setAccessSending] = useState(false);
+  const [accessSent, setAccessSent] = useState(false);
 
-  const sendAccessRequest = useCallback(() => {
+  const sendAccessRequest = useCallback(async () => {
     const email = accessEmail.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setAccessErr(t("accessEmailRequired"));
       return;
     }
     setAccessErr(null);
+
+    if (ACCESS_WEBHOOK) {
+      try {
+        setAccessSending(true);
+        await fetch(ACCESS_WEBHOOK, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=UTF-8" },
+          body: JSON.stringify({
+            email,
+            message: accessMsg.trim(),
+            app: "worldcup-topscorer",
+            requestedAt: new Date().toISOString(),
+          }),
+        });
+        setAccessSent(true);
+        return;
+      } catch {
+        // fall through to mailto if the webhook is unreachable
+      } finally {
+        setAccessSending(false);
+      }
+    }
+
     const lines = [
       t("accessMailIntro"),
       "",
@@ -78,7 +105,7 @@ export function App() {
       `?subject=${encodeURIComponent(t("accessMailSubject"))}` +
       `&body=${encodeURIComponent(lines.join("\n"))}`;
     window.location.href = href;
-  }, [accessEmail, accessMsg, t]);
+  }, [accessEmail, accessMsg, t, ACCESS_WEBHOOK]);
 
   useEffect(() => {
     (async () => {
@@ -183,29 +210,38 @@ export function App() {
             </button>
           ) : (
             <div className="access-form">
-              <h3>{t("accessTitle")}</h3>
-              <p className="access-hint">{t("accessHint")}</p>
-              <input
-                type="email"
-                placeholder={t("accessEmailPlaceholder")}
-                value={accessEmail}
-                onChange={(e) => setAccessEmail(e.target.value)}
-              />
-              <textarea
-                placeholder={t("accessMsgPlaceholder")}
-                value={accessMsg}
-                rows={3}
-                onChange={(e) => setAccessMsg(e.target.value)}
-              />
-              {accessErr && <p className="login-error">{accessErr}</p>}
-              <div className="access-actions">
-                <button type="button" className="access-cancel" onClick={() => setShowAccess(false)}>
-                  {t("cancel")}
-                </button>
-                <button type="button" className="access-send" onClick={sendAccessRequest}>
-                  {t("sendRequest")}
-                </button>
-              </div>
+              {accessSent ? (
+                <>
+                  <h3>{t("accessSentTitle")}</h3>
+                  <p className="access-hint">{t("accessSentMsg")}</p>
+                </>
+              ) : (
+                <>
+                  <h3>{t("accessTitle")}</h3>
+                  <p className="access-hint">{t("accessHint")}</p>
+                  <input
+                    type="email"
+                    placeholder={t("accessEmailPlaceholder")}
+                    value={accessEmail}
+                    onChange={(e) => setAccessEmail(e.target.value)}
+                  />
+                  <textarea
+                    placeholder={t("accessMsgPlaceholder")}
+                    value={accessMsg}
+                    rows={3}
+                    onChange={(e) => setAccessMsg(e.target.value)}
+                  />
+                  {accessErr && <p className="login-error">{accessErr}</p>}
+                  <div className="access-actions">
+                    <button type="button" className="access-cancel" onClick={() => setShowAccess(false)} disabled={accessSending}>
+                      {t("cancel")}
+                    </button>
+                    <button type="button" className="access-send" onClick={sendAccessRequest} disabled={accessSending}>
+                      {accessSending ? t("accessSending") : t("sendRequest")}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
