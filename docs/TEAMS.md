@@ -1,37 +1,37 @@
-# Internal Teams post — draft (Microsoft)
+# Post Teams interne — brouillon (Microsoft)
 
-> For an internal channel (e.g. a Rayfin / Fabric / community channel). Casual tone,
-> colleague-to-colleague. Attach `docs/screenshots/app-en.png`.
-
----
-
-🚀 **Weekend build: a World Cup 2026 "Top Scorer" app, fully on Rayfin + Fabric**
-
-Hi all 👋 — I wanted to share a small end-to-end demo I put together to kick the tyres on **Rayfin**, and I'm genuinely impressed by how little plumbing I had to write.
-
-**What it does:** a live leaderboard of the World Cup 2026 top scorers, an all-time tab, and a fun "favourites" feature where people vote for their favourite scorer (with their name). Bilingual FR/EN. 🇫🇷🇬🇧
-
-**What Rayfin gave me in one command (`rayfin up`):**
-- 🗄️ a managed **SQL database on Fabric**, scaffolded straight from my TypeScript entities
-- 🔐 **Fabric SSO** (Entra ID) auth, no auth code to write
-- 🌐 **static hosting** for the React/Vite front-end
-
-**What I added on Fabric for the live data:**
-- 📓 a Python **Notebook** + scheduled **Data Pipeline** (every 3h) that pulls match stats and UPSERTs them into the same SQL DB via parameterized T-SQL
-- 🔑 the API key in **Azure Key Vault** (read at runtime by the notebook identity) — nothing hard-coded
-- a small gotcha worth noting: the source API encodes scorer names with noise ("Havertz 45+5' pen", own goals as "o.g") — so the notebook cleans names and excludes own goals before aggregating
-
-**Why I think it's worth a look:** it's the "prototype → production" path without giving up identity, data integrity or governance. Everything is Entra-authenticated end to end.
-
-🔗 Live app: https://hasty-tarn-a20bfa49da-swedencentral.webapp.fabricapps.net
-💻 Code (open source): https://github.com/marc-hadjeje/worldcup-topscorer
-
-Happy to walk anyone through the setup or share the repo as a starting template. Feedback very welcome! 🙌
+> Pour un canal interne (ex. canal Rayfin / Fabric / communauté). Ton décontracté,
+> entre collègues. Joindre `docs/screenshots/app-en.png`.
 
 ---
 
-## Short variant (channel / DM)
+🚀 **Build d'un week-end : une appli « Meilleur Buteur » Coupe du Monde 2026, 100 % Rayfin + Fabric**
 
-Built a tiny World Cup 2026 "top scorer" app to try **Rayfin** end to end: one command gave me a Fabric SQL DB + Fabric SSO + hosting, and I added a Fabric pipeline (Notebook + Key Vault) that refreshes the stats every 3h. Idea → prod, Entra-authenticated throughout.
+Salut à toutes et à tous 👋 — je voulais partager une petite démo de bout en bout que j'ai montée pour tester **Rayfin**, et franchement je suis bluffé par la quantité de plomberie que je n'ai **pas** eu à écrire.
 
-Live: https://hasty-tarn-a20bfa49da-swedencentral.webapp.fabricapps.net · Code: https://github.com/marc-hadjeje/worldcup-topscorer — feedback welcome! ⚽🚀
+**Ce que ça fait :** un classement en direct des meilleurs buteurs de la CDM 2026, un onglet « toutes éditions », et une feature « favoris » sympa où chacun vote pour son buteur préféré (avec son nom). Bilingue FR/EN. 🇫🇷🇬🇧
+
+**Ce que Rayfin m'a donné en une seule commande (`rayfin up`) :**
+- 🗄️ une **base SQL managée sur Fabric**, générée directement depuis mes entités TypeScript
+- 🔐 l'auth **Fabric SSO** (Entra ID), sans une ligne de code d'authentification
+- 🌐 l'**hébergement statique** du front React/Vite
+
+**Ce que j'ai ajouté sur Fabric pour la donnée live :**
+- 📓 un **Notebook** Python + un **Data Pipeline** planifié (toutes les 3h) qui récupère les stats des matchs et fait des UPSERT dans la même base SQL via du T-SQL paramétré
+- 🔑 la clé API dans **Azure Key Vault** (lue au runtime par l'identité du notebook) — rien en dur
+- un petit piège à signaler : l'API source encode les noms de buteurs avec du bruit (« Havertz 45+5' pen », les csc en « o.g ») — le notebook nettoie donc les noms et exclut les csc avant d'agréger
+
+**Pourquoi ça vaut le coup d'œil :** c'est le chemin « prototype → prod » sans sacrifier l'identité, l'intégrité des données ni la gouvernance. Tout est authentifié via Entra ID de bout en bout.
+
+🔗 App en ligne : https://hasty-tarn-a20bfa49da-swedencentral.webapp.fabricapps.net
+💻 Code (open source) : https://github.com/marc-hadjeje/worldcup-topscorer
+
+Avec plaisir pour faire une démo du setup à qui veut, ou partager le repo comme template de départ. Vos retours sont les bienvenus ! 🙌
+
+---
+
+## Variante courte (canal / DM)
+
+J'ai monté une petite appli « top buteur » CDM 2026 pour tester **Rayfin** de bout en bout : une commande m'a donné une base SQL Fabric + Fabric SSO + hébergement, et j'ai ajouté un pipeline Fabric (Notebook + Key Vault) qui rafraîchit les stats toutes les 3h. Idée → prod, authentifié via Entra ID partout.
+
+En ligne : https://hasty-tarn-a20bfa49da-swedencentral.webapp.fabricapps.net · Code : https://github.com/marc-hadjeje/worldcup-topscorer — vos retours sont les bienvenus ! ⚽🚀
