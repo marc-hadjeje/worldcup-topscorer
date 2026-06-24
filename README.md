@@ -24,6 +24,22 @@ Rayfin provides the **database, authentication (Fabric SSO) and hosting** in a s
 
 > Editable diagram: [`docs/architecture.excalidraw`](docs/architecture.excalidraw) · full write-up in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## 🗣️ The prompts behind this app
+
+This whole app was built conversationally on **Rayfin** — from idea to a deployed Fabric app — starting with a single prompt:
+
+> 💬 *« je veux créer une rayfin sur un nouveau workspace sur le theme de la coupe du monde par exemple qui sera meilleur buteur »*
+
+…then refined with a few follow-up prompts:
+
+- *« tu peux me rajouter les données avec coupe du monde 2026 et me permettre d'ajouter mon favoris avec mon nom »*
+- *« tu peux m'ajouter vignette images des top scorer »*
+- *« je veux les top buteurs que sur 2026 et une section top buteur tt coupe du monde confondu ; dans les favoris on voit qui est le favori et le nom de la personne qui a voté »*
+- *« un pipeline Fabric qui met à jour les stats des matchs dans ma base SQL »*
+- *« ajoute un bouton FR / EN et traduis la doc en anglais »*
+
+No infrastructure was provisioned by hand: Rayfin scaffolded the SQL database, Fabric SSO and hosting, and a Fabric pipeline keeps the stats fresh.
+
 ## Features
 
 - 🏆 **WC 2026** scorers leaderboard + **all-time** leaderboard (legends included)
