@@ -185,6 +185,17 @@ export function App() {
     .filter((p) => p.goals > 0 || p.matchesPlayed > 0)
     .slice(0, 30);
 
+  // Country filter: only keep teams that have at least one scorer (goals > 0)
+  // within the unfiltered top-30 2026 leaderboard.
+  const top30TeamIds = new Set(
+    players
+      .filter((p) => p.goals > 0 || p.matchesPlayed > 0)
+      .slice(0, 30)
+      .filter((p) => p.goals > 0)
+      .map((p) => p.team_id)
+  );
+  const filterableTeams = teams.filter((tm) => top30TeamIds.has(tm.id));
+
   // All-time tab: total = historical baseline (allTimeGoals) + live 2026 goals.
   const allTimeTotal = (p: typeof players[number]) =>
     (p.allTimeGoals ?? 0) + (p.goals ?? 0);
@@ -366,7 +377,7 @@ export function App() {
         </button>
       </div>
 
-      <TeamFilter teams={teams} selected={selectedTeam} onSelect={setSelectedTeam} />
+      <TeamFilter teams={filterableTeams} selected={selectedTeam} onSelect={setSelectedTeam} />
 
       {activeTab === "2026" ? (
       <Leaderboard players={season2026} mode="2026" favorites={favorites} teams={teams} />
