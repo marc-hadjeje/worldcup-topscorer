@@ -180,6 +180,9 @@ export function App() {
     ? players.filter((p) => p.team_id === selectedTeam)
     : players;
 
+  // 2026 tab: only real 2026 participants (scored or played this edition)
+  const season2026 = filtered.filter((p) => p.goals > 0 || p.matchesPlayed > 0);
+
   // Sort by allTimeGoals for the all-time tab
   const allTimeSorted = [...filtered].sort((a, b) => b.allTimeGoals - a.allTimeGoals);
 
@@ -360,7 +363,7 @@ export function App() {
       <TeamFilter teams={teams} selected={selectedTeam} onSelect={setSelectedTeam} />
 
       {activeTab === "2026" ? (
-      <Leaderboard players={filtered} mode="2026" favorites={favorites} teams={teams} />
+      <Leaderboard players={season2026} mode="2026" favorites={favorites} teams={teams} />
       ) : (
       <Leaderboard players={allTimeSorted} mode="alltime" favorites={favorites} teams={teams} />
       )}
