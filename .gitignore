@@ -44,3 +44,5 @@ rayfin/.temp/
 
 # Internal access-automation workflow (kept local only)
 automation/
+
+fabric/notebook.b64

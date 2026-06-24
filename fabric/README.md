@@ -1,7 +1,9 @@
 # Fabric — Stats update pipeline
 
 Automatically updates `dbo.Players` (goals + matches played) of the Rayfin SQL
-database from the **Zafronix World Cup API**, every 3 hours.
+database from the **Zafronix World Cup API**, every 3 hours. Goal-scorers (and
+their team) that are **not yet** in the database are **created automatically**,
+so the leaderboard stays fully API-driven with no manual player entry.
 
 ## Deployed items (workspace `wks-demo-worldcup`)
 
@@ -36,6 +38,10 @@ database from the **Zafronix World Cup API**, every 3 hours.
 6. **Purges** the current 2026 stats (`goals`, `matchesPlayed` reset to 0), then
    `UPDATE dbo.Players SET goals = ?, matchesPlayed = ? WHERE id = ?` — parameterized.
    `allTimeGoals` (historical) is never touched.
+7. **Auto-creates missing goal-scorers**: any scorer from the API not already in
+   `dbo.Players` is inserted (name, number, position, team). Their **team** is
+   created in `dbo.Teams` too if it doesn't exist (English API name → FIFA code +
+   French name via the `NATION` map). New players start with `allTimeGoals = 0`.
 
 ## Redeploy after a change
 
