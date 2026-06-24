@@ -1,0 +1,33 @@
+{
+  "name": "worldcup-topscorer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "seed": "npx tsx scripts/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@microsoft/rayfin-auth": "^1.33.2",
+    "@microsoft/rayfin-auth-provider-fabric": "^1.33.2",
+    "@microsoft/rayfin-client": "^1.33.2",
+    "@microsoft/rayfin-core": "^1.33.2",
+    "@microsoft/rayfin-data": "^1.33.2",
+    "@vitejs/plugin-react": "^6.0.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "vite": "^8.1.0"
+  },
+  "devDependencies": {
+    "@microsoft/rayfin-cli": "^1.33.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  }
+}

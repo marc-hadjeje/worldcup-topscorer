@@ -1,0 +1,58 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Run update-worldcup-stats",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 1,
+          "retryIntervalInSeconds": 60,
+          "secureInput": true,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "7e1dcfb1-f24e-477e-a46c-bc64f54e840a",
+          "workspaceId": "8af45ba5-7342-4a36-a332-91120bf9fa9c",
+          "parameters": {
+            "apiKey": {
+              "value": "@pipeline().parameters.apiKey",
+              "type": "string"
+            },
+            "apiHost": {
+              "value": "@pipeline().parameters.apiHost",
+              "type": "string"
+            },
+            "league": {
+              "value": "@pipeline().parameters.league",
+              "type": "string"
+            },
+            "season": {
+              "value": "@pipeline().parameters.season",
+              "type": "string"
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "apiKey": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "apiHost": {
+        "type": "string",
+        "defaultValue": "api.zafronix.com"
+      },
+      "league": {
+        "type": "string",
+        "defaultValue": "WC"
+      },
+      "season": {
+        "type": "string",
+        "defaultValue": "2026"
+      }
+    }
+  }
+}
