@@ -82,6 +82,7 @@ const FLAGS: Record<string, string> = {
   KSA: "🇸🇦",
   SCO: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
   RSA: "🇿🇦",
+  ITA: "🇮🇹",
   SWE: "🇸🇪",
   SUI: "🇨🇭",
   TUN: "🇹🇳",
@@ -136,6 +137,7 @@ const TEAM_COLORS: Record<string, string> = {
   KSA: "#16a34a",
   SCO: "#1d4ed8",
   RSA: "#15803d",
+  ITA: "#1d4ed8",
   SWE: "#facc15",
   SUI: "#dc2626",
   TUN: "#dc2626",
@@ -231,7 +233,7 @@ const NATION_NAMES: Record<string, string> = {
 function PlayerAvatar({ player, teamCode }: { player: Player; teamCode?: string }) {
   const code = teamCode || player["team.code"] || "";
   const bgColor = TEAM_COLORS[code] ?? "#374151";
-  const initials = `${player.firstName[0]}${player.lastName[0]}`;
+  const initials = (`${player.firstName?.[0] ?? ""}${player.lastName?.[0] ?? ""}`).trim() || "?";
   const imgUrl = PLAYER_IMAGES[player.lastName];
 
   if (imgUrl) {
