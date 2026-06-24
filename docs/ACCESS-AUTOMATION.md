@@ -41,7 +41,9 @@ Store the client secret in **Azure Key Vault** (e.g. `kv-wc-*`), not in code.
 
 ---
 
-## 2. The Power Automate flow
+## 2. The flow
+
+### Option A — Power Automate (no-code)
 
 **Trigger — "When an HTTP request is received"** with this JSON schema:
 
@@ -107,6 +109,32 @@ Capture the new user's object id from the response: `@{body('HTTP_invite')?['inv
 ---
 
 ## 3. Wire the app to the flow
+
+> **Two ways to build the flow** — pick one:
+> - **Option A — Power Automate (no-code)**, described above.
+> - **Option B — Logic App (one command)**: deploy the ready-made template in
+>   [`automation/`](../automation) — no manual flow building, no secret.
+>
+> ### Option B — Logic App (Infrastructure-as-Code)
+>
+> The template [`automation/access-approval.logicapp.json`](../automation/access-approval.logicapp.json)
+> implements the exact same flow (HTTP trigger → approval email → invite guest →
+> assign Fabric role). Graph and Fabric are called with the Logic App's
+> **system-assigned managed identity**, so there is **no client secret** to manage.
+>
+> ```powershell
+> .\automation\deploy-logicapp.ps1 -ResourceGroup rg-worldcup -Location westeurope
+> ```
+>
+> The script deploys the Logic App, grants its managed identity the Graph
+> `User.Invite.All` permission, adds it to the Fabric workspace, and prints the
+> HTTP trigger URL. Then finish with the two one-time steps it lists:
+> 1. **Authorize** the Office 365 connection (one click in the Azure portal) so
+>    the approval email can be sent from the approver's mailbox.
+> 2. Enable **"Service principals can use Fabric APIs"** (Fabric admin portal).
+>
+> With this option, skip directly to setting `VITE_ACCESS_WEBHOOK_URL` below.
+
 
 The "Send request" button posts to the flow when `VITE_ACCESS_WEBHOOK_URL` is set;
 otherwise it falls back to a `mailto:` to Marc.
