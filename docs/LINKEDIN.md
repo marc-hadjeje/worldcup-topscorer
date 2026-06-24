@@ -1,42 +1,42 @@
-# Post LinkedIn — brouillon
+# LinkedIn post — draft
 
-> Copie-colle prête à l'emploi. Visuel suggéré : le schéma `docs/architecture.excalidraw`
-> exporté en PNG (ou une capture du leaderboard de l'app).
+> Copy-paste ready. Suggested visual: `docs/screenshots/app-en.png` (leaderboard + votes)
+> or `docs/architecture.png`.
 
 ---
 
-⚽ J'ai construit une app « Meilleur Buteur de la Coupe du Monde 2026 » — de l'idée à la prod — sur **Rayfin** + **Microsoft Fabric**. Et honnêtement, le plus impressionnant c'est ce que je n'ai PAS eu à faire. 👇
+⚽ I built a **"World Cup 2026 Top Scorer"** web app — from idea to production — on **Rayfin** + **Microsoft Fabric**. And honestly, the most impressive part is everything I did NOT have to do. 👇
 
-Avec **Rayfin**, une seule commande me donne :
-🗄️ une base de données SQL managée sur Fabric (générée depuis mes entités TypeScript)
-🔐 l'authentification Fabric SSO
-🌐 l'hébergement statique de mon front React
+With **Rayfin**, a single command gave me:
+🗄️ a managed SQL database on Fabric (generated from my TypeScript entities)
+🔐 Fabric SSO authentication
+🌐 static hosting for my React front-end
 
-Zéro infra à provisionner. Je définis mon modèle (`Player`, `Team`, `Goal`…), je code mon UI, Rayfin déploie le reste sur Fabric. C'est exactement le pont « prototype → production » qui manque d'habitude.
+Zero infrastructure to provision. I define my model (`Player`, `Team`, `Goal`…), I write my UI, and Rayfin deploys the rest on Fabric. That's exactly the "prototype → production" bridge that's usually missing.
 
-Puis j'ai ajouté la couche temps réel avec **Microsoft Fabric** :
-🔄 un Data Pipeline planifié (toutes les 3h)
-📓 un Notebook Python qui récupère les stats des matchs via une API foot et fait des UPSERT en T-SQL
-🔑 la clé API sécurisée dans Azure Key Vault — aucun secret dans le code
+Then I added the live-data layer with **Microsoft Fabric**:
+🔄 a scheduled Data Pipeline (every 3h)
+📓 a Python Notebook that pulls match stats from a football API and UPSERTs them in T-SQL
+🔑 the API key secured in Azure Key Vault — no secret in the code
 
-Le tout authentifié de bout en bout via Entra ID : SSO côté front, token AAD pour la base, access policy pour Key Vault.
+Everything authenticated end-to-end through Entra ID: SSO on the front, AAD token for the database, access policy for Key Vault.
 
-Résultat : une app complète, sécurisée et auto-rafraîchissante, construite en mode « vibe-coding avec garde-fous ». La vraie valeur de Rayfin, ce n'est pas d'aller vite — c'est d'aller vite SANS sacrifier l'identité, l'intégrité des données et la gouvernance.
+The result: a complete, secure, self-refreshing app, built in "vibe-coding with guardrails" mode. The real value of Rayfin isn't just going fast — it's going fast WITHOUT sacrificing identity, data integrity and governance.
 
-Le code est open source 👇
+The code is open source 👇
 https://github.com/marc-hadjeje/worldcup-topscorer
 
 #MicrosoftFabric #Rayfin #DataEngineering #React #Azure #VibeCoding #WorldCup2026
 
 ---
 
-## Variante courte
+## Short variant
 
-⚽ Une app « Top Buteur Coupe du Monde 2026 » buildée sur **Rayfin** + **Microsoft Fabric**.
+⚽ A "World Cup 2026 Top Scorer" app built on **Rayfin** + **Microsoft Fabric**.
 
-En une commande, Rayfin m'a donné base de données SQL, auth Fabric SSO et hébergement — déployés sur Fabric, sans infra à gérer. J'ai ajouté un pipeline Fabric (Notebook Python + Key Vault) qui rafraîchit les stats toutes les 3h en T-SQL.
+In one command, Rayfin gave me a SQL database, Fabric SSO auth and hosting — deployed on Fabric, no infra to manage. I added a Fabric pipeline (Python Notebook + Key Vault) that refreshes the stats every 3h in T-SQL.
 
-Idée → prod, sécurisé de bout en bout via Entra ID. 🚀
+Idea → production, secured end-to-end through Entra ID. 🚀
 
 Repo 👉 https://github.com/marc-hadjeje/worldcup-topscorer
 
