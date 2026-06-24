@@ -22,6 +22,10 @@ coverage
 # Local env files (`*.local` matches `.env.local`, `.env.*.local`, etc.)
 *.local
 
+# Root Vite env file — holds VITE_ACCESS_WEBHOOK_URL (signed trigger URL); never commit.
+/.env
+/.env.*
+
 # Rayfin — auto-generated or secret-bearing files
 # `rayfin/.env*` covers .env, .env.bak (emitted by env-file v2 migration with
 # secrets), and any future .env-family files Rayfin's runtime adds.
@@ -37,3 +41,6 @@ rayfin/.temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Internal access-automation workflow (kept local only)
+automation/
