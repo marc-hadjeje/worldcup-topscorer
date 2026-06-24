@@ -11,6 +11,7 @@ interface Player {
   assists: number;
   matchesPlayed: number;
   allTimeGoals: number;
+  team_id?: string;
   "team.name"?: string;
   "team.code"?: string;
 }
@@ -267,10 +268,21 @@ export function Leaderboard({ players, mode, favorites = [], teams = [] }: Props
   // Resolve a display team (code + name) for a player, falling back to the
   // legend nationality map when the record has no team relation.
   const teamNameByCode: Record<string, string> = {};
-  teams.forEach((tm) => { if (tm.code) teamNameByCode[tm.code] = tm.name; });
+  const teamById: Record<string, { code: string; name: string }> = {};
+  teams.forEach((tm) => {
+    if (tm.code) teamNameByCode[tm.code] = tm.name;
+    if (tm.id) teamById[tm.id] = { code: tm.code, name: tm.name };
+  });
   const resolveTeam = (p: Player): { code: string; name: string } => {
     let code = p["team.code"] ?? "";
     let name = p["team.name"] ?? "";
+    // Fallback 1: resolve from the loaded teams list via team_id (covers
+    // records whose relation wasn't flattened by the BaaS query).
+    if (!code && p.team_id && teamById[p.team_id]) {
+      code = teamById[p.team_id].code;
+      name = teamById[p.team_id].name;
+    }
+    // Fallback 2: legend nationality map (for historical players w/o a team).
     if (!code) {
       const fallback = LEGEND_NATION[`${p.firstName} ${p.lastName}`.trim()];
       if (fallback) {

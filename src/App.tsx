@@ -184,7 +184,9 @@ export function App() {
   const season2026 = filtered.filter((p) => p.goals > 0 || p.matchesPlayed > 0);
 
   // Sort by allTimeGoals for the all-time tab
-  const allTimeSorted = [...filtered].sort((a, b) => b.allTimeGoals - a.allTimeGoals);
+  const allTimeSorted = [...filtered]
+    .sort((a, b) => b.allTimeGoals - a.allTimeGoals)
+    .slice(0, 20);
 
   if (!isAuthenticated && !loading) {
     return (
